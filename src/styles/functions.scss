@@ -1,0 +1,5 @@
+// src/styles/_functions.scss
+
+@function adaptive($size) {
+  @return calc(#{$size} * 100vw / 1920);
+}

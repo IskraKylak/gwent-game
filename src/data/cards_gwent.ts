@@ -31,7 +31,7 @@ export interface SpecialCard extends BaseCard {
   value?: number        // величина буста/дебафа (де потрібно)
 }
 
-export type Card = UnitCard | SpecialCard
+export type Card = UnitCard
 
 // --------- helpers ----------
 const uid = (prefix: string, i: number) =>
@@ -65,8 +65,7 @@ function repeatSpecials(
 
 function makeRaceCards(
   race: Race,
-  units: { name: string; power: number }[],
-  specials: { name: string; effect: SpecialEffect; value?: number }[]
+  units: { name: string; power: number }[]
 ): Card[] {
   // 8 юнітів
   const unitCards: UnitCard[] = units.slice(0, 8).map((u, i) => ({
@@ -80,8 +79,8 @@ function makeRaceCards(
     ability: (u as any).ability as UnitAbility | undefined,
   }))
   // 12 спеціальних (4 базові × 3 копії)
-  const specialCards = repeatSpecials(race, specials.slice(0, 4))
-  return [...unitCards, ...specialCards] // разом 20
+  // const specialCards = repeatSpecials(race, specials.slice(0, 4))
+  return [...unitCards] // разом 20
 }
 
 // --------- списки по расах ----------
@@ -95,7 +94,6 @@ const beastsUnits = [
   { name: 'Орел', power: 2 },
   { name: 'Мамонт', power: 8 },
 ]
-const beastsSpecs = []
 
 const magesUnits = [
   { name: 'Маг-Учень', power: 3 },
@@ -103,23 +101,21 @@ const magesUnits = [
   { name: 'Чарівник Вітру', power: 4 },
   { name: 'Льодяний Маг', power: 4 },
   { name: 'Вогняний Елементаль', power: 6 },
-  { name: 'Жрець Світла', power: 3 },
+  { name: 'Жрець Світла', power: 3, ability: { type: 'buffAllyRandom', multiplier: 2 } },
   { name: 'Маг Тіні', power: 2 },
-  { name: 'Архімаг', power: 8, ability: { type: 'buffAllyRandom', multiplier: 2 } },
+  { name: 'Архімаг', power: 8 }
 ]
-const magesSpecs = []
 
 const undeadUnits = [
   { name: 'Скелет-Воїн', power: 3 },
   { name: 'Зомбі', power: 4 },
   { name: 'Привид', power: 2 },
-  { name: 'Некромант', power: 5, ability: { type: 'weakenEnemyRandom', divisor: 2 } },
+  { name: 'Некромант', power: 5, ability: { type: 'summonFromDeck' } },
   { name: 'Вампір', power: 6 },
   { name: 'Кістяний Голем', power: 7 },
   { name: 'Проклятий Рицар', power: 6 },
   { name: 'Ліхтарник', power: 1 },
 ]
-const undeadSpecs = []
 
 const mechUnits = [
   { name: 'Механічний Солдат', power: 3 },
@@ -131,12 +127,11 @@ const mechUnits = [
   { name: 'Сервіс-Робот', power: 2 },
   { name: 'Сталева Бруталка', power: 7 },
 ]
-const mechSpecs = []
 
 // --------- експорт усіх 80 карт ----------
 export const cards: Card[] = [
-  ...makeRaceCards('beasts', beastsUnits, beastsSpecs),
-  ...makeRaceCards('mages', magesUnits, magesSpecs),
-  ...makeRaceCards('undead', undeadUnits, undeadSpecs),
-  ...makeRaceCards('mechanical', mechUnits, mechSpecs),
+  ...makeRaceCards('beasts', beastsUnits),
+  ...makeRaceCards('mages', magesUnits),
+  ...makeRaceCards('undead', undeadUnits),
+  ...makeRaceCards('mechanical', mechUnits),
 ]

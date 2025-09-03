@@ -1,74 +1,76 @@
 <template>
-  <div class="board">
-    <h1>🃏 Гвінт (спрощена версія)</h1>
-
+  <div class="Board">
     <!-- Статистика -->
-    <div class="stats">
-      <div>
-        👤 Ти ({{ player.race?.name }}): {{ player.score }}
-        <span v-if="player.passed">(Пас)</span>
-      </div>
-      <div>
-        🤖 Ворог ({{ enemy.race?.name }}): {{ enemy.score }} 
+    <div class="Board-stats">
+      <div class="Board-top">
+        🤖 Ворог ({{ enemy.race }}): {{ enemy.score }} 
         <span v-if="enemy.passed">(Пас)</span>
       </div>
-      <div>Раунд: {{ game.round }}</div>
-      <div>Хід: {{ game.turn }}</div>
-      <div>Перемоги: Ти {{ game.roundsWon.player }} – {{ game.roundsWon.enemy }} Ворог</div>
+      <div class="Board-middle">
+        <div>Раунд: {{ game.round }}</div>
+        <div>Хід: {{ game.turn }}</div>
+        <div>Перемоги: Ти {{ game.roundsWon.player }} – {{ game.roundsWon.enemy }} Ворог</div>
+      </div>
+      <div class="Board-bottom">
+        👤 Ти ({{ player.race }}): {{ player.score }}
+        <span v-if="player.passed">(Пас)</span>
+        <button @click="passRound" :disabled="game.turn !== 'player' || player.passed">
+          Пас
+        </button>
+      </div>
     </div>
+    <div class="Board-field">
+            <!-- Рука ворога -->
+      <h2 class="Board-title">Рука ворога</h2>
+      <div class="Board-handEnemy">
+        <Card
+          v-for="card in enemy.hand"
+          :key="card.id"
+          :card="card"
+          :class="{ clickable: game.turn === 'player' && !player.passed }"
+          hide
+          @click="playCardClick(card)"
+        />
+      </div>
 
-    <!-- Рука гравця -->
-    <h2>Рука ворога</h2>
-    <div class="hand">
-      <Card
-        v-for="card in enemy.hand"
-        :key="card.id"
-        :card="card"
-        :class="{ clickable: game.turn === 'player' && !player.passed }"
-        hide
-        @click="playCardClick(card)"
-      />
-    </div>
+      <!-- Поле ворога -->
+      <div class="Board-battlefield">
+        <img class="Board-fieldImage" src="@/assets/img/2.jpg" alt="img">
+        <Card v-for="card in enemy.board" :key="card.id" :card="card" />
+      </div>
 
-    <!-- Поле ворога -->
-    <h2>Поле ворога</h2>
-    <div class="field">
-      <Card v-for="card in enemy.board" :key="card.id" :card="card" />
-    </div>
+      <div class="Board-battlefield">
+        <img class="Board-fieldImage" src="@/assets/img/1.webp" alt="img">
+        <Card v-for="card in player.board" :key="card.id" :card="card" />
+      </div>
 
-    <hr />
-
-    <!-- Поле гравця -->
-    <h2>Твоє поле</h2>
-    <div class="field">
-      <Card v-for="card in player.board" :key="card.id" :card="card" />
-    </div>
-
-    <hr />
-
-    <!-- Рука гравця -->
-    <h2>Твоя рука</h2>
-    <div class="hand">
-      <Card
-        v-for="card in player.hand"
-        :key="card.id"
-        :card="card"
-        :class="{ clickable: game.turn === 'player' && !player.passed }"
-        @click="playCardClick(card)"
-      />
-    </div>
-
-    <!-- Кнопки -->
-    <div class="controls">
-      <button @click="passRound" :disabled="game.turn !== 'player' || player.passed">
-        Пас
-      </button>
+      <!-- Рука гравця зі слайдером -->
+      <h2 class="Board-title">Твоя рука</h2>
+      <Swiper
+        :slides-per-view="5"
+        :grab-cursor="true"
+        pagination
+        class="Board-mySwiper"
+      >
+        <SwiperSlide v-for="card in player.hand" :key="card.id">
+          <Card
+            :card="card"
+            :class="{ clickable: game.turn === 'player' && !player.passed }"
+            @click="playCardClick(card)"
+          />
+        </SwiperSlide>
+      </Swiper>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { Swiper, SwiperSlide } from "swiper/vue"
+
+import "swiper/css"
+import "swiper/css/pagination"
+
 import { useGameStore } from '@/stores/game'
 import { usePlayerStore } from '@/stores/player'
 import { useEnemyStore } from '@/stores/enemy'
@@ -90,8 +92,6 @@ function playCardClick(card: CardType) {
 
 function finishTurn() {
   console.log('🔹 Гравець завершує хід')
-  // У нашій логіці "завершити хід" = просто нічого не грати,
-  // а от "пас" явно передаємо в store
 }
 
 function passRound() {
@@ -100,40 +100,108 @@ function passRound() {
 }
 </script>
 
-<style scoped>
-.board {
-  padding: 20px;
+<style scoped lang="scss">
+.Board {
+  padding: adaptive(20);
   font-family: sans-serif;
-}
+  display: grid;
+  grid-template-columns: adaptive(200) 1fr;
+  width: 100%;
 
-.stats {
-  margin-bottom: 10px;
-}
+  &-separator {
+    border: none;
+    border-top: 2px solid #ccc;
+    margin: adaptive(10) 0;
+    width: 100%;
+  }
 
-.field,
-.hand {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 10px 0;
-}
+  &-title {
+    font-size: adaptive(22);
+    font-weight: bold;
+    margin-bottom: adaptive(10);
+  }
 
-.controls {
-  margin-top: 15px;
-  display: flex;
-  gap: 10px;
-}
+  &-stats {
+    margin-bottom: adaptive(10);
+  }
 
-button {
-  padding: 8px 16px;
-  cursor: pointer;
-}
+  &-field {
+    display: flex;
+    flex-direction: column;
+    gap: adaptive(10);
+    flex-wrap: wrap;
+    margin: adaptive(10) auto;
+    width: adaptive(1000);
+    padding: adaptive(10);
+    border: 4px solid #404637;
+    background: #e9ece1;
+  }
 
-.clickable {
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-.clickable:hover {
-  transform: scale(1.05);
+  &-battlefield {
+    display: flex;
+    gap: adaptive(10);
+    align-items: center;
+    flex-wrap: wrap;
+    height: adaptive(180);
+    overflow: hidden;
+    position: relative;
+    border: 5px solid #ccc;
+    padding: adaptive(10);
+  }
+
+  &-fieldImage {
+    width: 100%;
+    height: auto;
+    position: absolute;
+    object-fit: cover;
+    left: 0;
+  }
+
+  &-handEnemy {
+    display: flex;
+    gap: adaptive(10);
+    margin-bottom: adaptive(15);
+    overflow: hidden;
+    padding: adaptive(10);
+  }
+
+  /* Рука тепер у Swiper */
+  &-mySwiper {
+    width: 100%;
+    padding: adaptive(10);
+  }
+
+  &-controls {
+    margin-top: adaptive(15);
+    display: flex;
+    gap: adaptive(10);
+  }
+
+  &-button {
+    padding: adaptive(8) adaptive(16);
+    cursor: pointer;
+  }
+
+  &-clickable {
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  &-clickable:hover {
+    transform: scale(1.05);
+  }
+
+  &-stats {
+    flex-direction: column;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: adaptive(600);
+    padding: adaptive(10);
+    border: 4px solid #ee940e;
+    background: #f3cb90;
+    font-size: adaptive(20);
+    margin: auto;
+  }
 }
 </style>
